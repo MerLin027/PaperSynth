@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* PaperSynth Dark Theme - Black + Blue */
+    --background: 0 0% 3%;
+    --foreground: 0 0% 98%;
+    
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 98%;
+    
+    /* Electric Blue Primary */
+    --primary: 218 100% 50%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 218 100% 60%;
+    
+    /* Dark Secondary */
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 98%;
+    
+    /* Muted Grays */
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
+    
+    /* Cyan Accent */
+    --accent: 195 100% 50%;
+    --accent-foreground: 0 0% 3%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 0 0% 15%;
+    --input: 0 0% 8%;
+    --ring: 218 100% 50%;
+    
+    --radius: 0.75rem;
+    
+    /* Custom PaperSynth Colors */
+    --electric: 218 100% 50%;
+    --electric-glow: 218 100% 60%;
+    --deep-black: 0 0% 2%;
+    --soft-black: 0 0% 8%;
+    --cyan-bright: 195 100% 50%;
+    --blue-navy: 218 50% 15%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--electric)), hsl(var(--electric-glow)));
+    --gradient-dark: linear-gradient(180deg, hsl(var(--deep-black)), hsl(var(--soft-black)));
+    --gradient-glow: radial-gradient(circle, hsl(var(--electric) / 0.2), transparent);
+    
+    /* Shadows & Effects */
+    --shadow-electric: 0 0 40px hsl(var(--electric) / 0.3);
+    --shadow-glow: 0 10px 40px -10px hsl(var(--electric) / 0.4);
+    --shadow-card: 0 4px 24px hsl(var(--deep-black) / 0.8);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .light {
+    /* PaperSynth Light Theme - Clean + Blue */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    
+    /* Electric Blue Primary (same) */
+    --primary: 218 100% 50%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 218 100% 60%;
+    
+    /* Light Secondary */
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 20%;
+    
+    /* Muted Grays for light mode */
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 45%;
+    
+    /* Cyan Accent */
+    --accent: 195 100% 50%;
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 0 0% 88%;
+    --input: 0 0% 95%;
+    --ring: 218 100% 50%;
+    
+    /* Custom PaperSynth Colors for light */
+    --electric: 218 100% 50%;
+    --electric-glow: 218 100% 60%;
+    --deep-black: 0 0% 98%;
+    --soft-black: 0 0% 95%;
+    --cyan-bright: 195 100% 50%;
+    --blue-navy: 218 50% 85%;
+    
+    /* Gradients for light mode */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--electric)), hsl(var(--electric-glow)));
+    --gradient-dark: linear-gradient(180deg, hsl(var(--deep-black)), hsl(var(--soft-black)));
+    --gradient-glow: radial-gradient(circle, hsl(var(--electric) / 0.1), transparent);
+    
+    /* Shadows & Effects for light mode */
+    --shadow-electric: 0 0 40px hsl(var(--electric) / 0.2);
+    --shadow-glow: 0 10px 40px -10px hsl(var(--electric) / 0.3);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--soft-black));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--electric) / 0.5);
+    border-radius: var(--radius);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--electric) / 0.7);
+  }
+}
+
+@layer components {
+  /* Electric glow effect */
+  .electric-glow {
+    box-shadow: var(--shadow-electric);
+  }
+  
+  .electric-glow:hover {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .bg-gradient-dark {
+    background: var(--gradient-dark);
+  }
+}

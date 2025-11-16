@@ -1,0 +1,82 @@
+# PaperSynth Backend - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ==============================================================================
+# FastAPI and Server
+# ==============================================================================
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+python-multipart==0.0.9
+
+# ==============================================================================
+# Environment and Configuration
+# ==============================================================================
+python-dotenv==1.0.1
+
+# ==============================================================================
+# PDF Processing
+# ==============================================================================
+PyMuPDF==1.24.0
+
+# ==============================================================================
+# Office Document Generation
+# ==============================================================================
+python-pptx==1.0.0
+fpdf==1.7.2
+
+# ==============================================================================
+# AI/ML - Google Gemini
+# ==============================================================================
+google-generativeai==0.8.0
+
+# ==============================================================================
+# AI/ML - Text-to-Speech
+# ==============================================================================
+elevenlabs==1.0.0
+
+# ==============================================================================
+# AI/ML - Image Generation (Optional, for SDXL)
+# ==============================================================================
+torch==2.0.0
+diffusers==0.30.0
+transformers==4.40.0
+accelerate==0.25.0
+safetensors==0.4.0
+
+# ==============================================================================
+# System Monitoring
+# ==============================================================================
+psutil==5.9.0
+
+# ==============================================================================
+# HTTP Requests
+# ==============================================================================
+requests==2.31.0
+
+# ==============================================================================
+# Hugging Face Hub (for model downloads)
+# ==============================================================================
+huggingface-hub==0.20.0
+
+# ==============================================================================
+# Installation Instructions
+# ==============================================================================
+# 
+# Basic Installation (without SDXL):
+#   pip install fastapi uvicorn[standard] python-multipart python-dotenv \
+#               PyMuPDF python-pptx fpdf google-generativeai elevenlabs \
+#               psutil requests
+#
+# Full Installation (with SDXL):
+#   pip install -r requirements.txt
+#
+# GPU Support (CUDA):
+#   Install PyTorch with CUDA support:
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+#
+# Notes:
+#   - SDXL requires significant GPU/CPU resources
+#   - ElevenLabs requires API key (ELEVENLABS_API_KEY)
+#   - Gemini requires API key (GEMINI_API_KEY)
+#   - See backend.env.example for configuration
+
