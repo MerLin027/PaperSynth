@@ -51,3 +51,6 @@ wheels/
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary upload files
+temp_files/
