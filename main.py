@@ -74,9 +74,9 @@ DOWNLOAD_SIGNING_KEY = os.getenv("DOWNLOAD_SIGNING_KEY", "")
 # Initialize Gemini client
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    # Using gemini-2.0-flash (latest stable model as of Nov 2024+)
-    # Alternative: 'gemini-flash-latest' for always using the newest version
-    gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+    # Using gemini-flash-latest (always uses the newest stable flash model)
+    # This avoids quota issues with experimental models
+    gemini_model = genai.GenerativeModel('gemini-flash-latest')
 else:
     gemini_model = None
 
@@ -679,26 +679,24 @@ def gemini_summary(text, summary_length="medium"):
         }
         length_instruction = length_instructions.get(summary_length, "Provide a detailed summary in 400-600 words")
         
-        prompt = f"""You are an expert research paper analyst. {length_instruction}, focusing on key findings, methodology, conclusions, and implications.
+        prompt = f"""You are an expert research paper analyst. Analyze this paper and provide a structured, engaging summary. {length_instruction}
 
 Research Paper Content:
 {text}
 
-Please provide a well-structured summary with clear sections:
+Create a comprehensive summary including:
 
-**Key Findings:**
-[List the main discoveries and results]
+**Overview:** Provide a 2-3 sentence summary of the research question, methods, and main findings.
 
-**Methodology:**
-[Describe the research approach and methods used]
+**Key Findings:** List the main discoveries, results, and notable data. Cite specific claims with page/section references where relevant.
 
-**Conclusions:**
-[Summarize the main conclusions drawn]
+**Methodology:** Describe the research approach, methods, and experimental design used.
 
-**Implications:**
-[Discuss the broader impact and significance]
+**Conclusions:** Summarize the main conclusions drawn by the authors and any limitations acknowledged.
 
-Format your response with clear section headers and bullet points where appropriate."""
+**Implications:** Discuss the broader impact, real-world applications, significance for the field, and future research directions.
+
+Use clear language while maintaining technical accuracy. Include notable quotes that capture essential insights. Format with clear section headers and bullet points where appropriate to make it easy to understand and compelling to read."""
 
         response = gemini_model.generate_content(prompt)
         

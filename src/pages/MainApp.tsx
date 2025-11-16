@@ -20,6 +20,15 @@ export const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState('summary');
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
+  // Helper function to clean markdown syntax from text
+  const cleanMarkdown = (text: string) => {
+    return text
+      .replace(/\*\*(.+?)\*\*/g, '$1')  // Remove ** from bold text
+      .replace(/\*(.+?)\*/g, '$1')      // Remove * from italic text
+      .replace(/#{1,6}\s/g, '')         // Remove # from headings
+      .trim();
+  };
+
   /**
    * Handle PDF file upload and processing with Python FastAPI backend
    * 
@@ -342,12 +351,7 @@ export const MainApp: React.FC = () => {
             <h2 className="text-2xl font-bold text-white text-center">
               Upload Your Research Paper
             </h2>
-            <PDFUpload onFileUpload={handleFileUpload} />
-            {isProcessing && (
-              <div className="text-center">
-                <p className="text-muted-foreground">Processing your PDF... This may take a few moments.</p>
-              </div>
-            )}
+            <PDFUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
           </div>
         )}
 
@@ -393,10 +397,56 @@ export const MainApp: React.FC = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="prose prose-invert max-w-none">
-                      <p className="text-muted-foreground leading-relaxed">
-                        {uploadedFile.summary}
-                      </p>
+                    <div className="max-w-5xl mx-auto space-y-6">
+                      {/* Main Summary Card */}
+                      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-gray-700 shadow-xl">
+                        <div className="prose prose-invert max-w-none">
+                          <div className="text-gray-300 leading-relaxed space-y-6">
+                            {uploadedFile.summary.split('\n\n').map((section, index) => {
+                              // Check if it's a heading (starts with **, #, or all caps)
+                              const isHeading = section.startsWith('**') || section.startsWith('#') || 
+                                               (section.length < 100 && section === section.toUpperCase());
+                              
+                              if (isHeading) {
+                                return (
+                                  <h3 key={index} className="text-2xl font-bold text-white mt-8 mb-4 first:mt-0">
+                                    {cleanMarkdown(section)}
+                                  </h3>
+                                );
+                              }
+                              
+                              return (
+                                <div key={index} className="space-y-3">
+                                  {section.split('\n').map((line, i) => {
+                                    // Check if it's a bullet point
+                                    if (line.trim().startsWith('*') || line.trim().startsWith('-')) {
+                                      return (
+                                        <div key={i} className="flex items-start gap-3 ml-4">
+                                          <span className="text-blue-400 mt-1.5">•</span>
+                                          <span className="flex-1 text-gray-300">
+                                            {cleanMarkdown(line.replace(/^\*\s*|\-\s*/, ''))}
+                                          </span>
+                                        </div>
+                                      );
+                                    }
+                                    
+                                    // Regular paragraph text
+                                    if (line.trim()) {
+                                      return (
+                                        <p key={i} className="text-gray-300 text-base leading-relaxed">
+                                          {cleanMarkdown(line)}
+                                        </p>
+                                      );
+                                    }
+                                    
+                                    return null;
+                                  })}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                     <div className="mt-6 pt-4 border-t border-border">
                       <h4 className="font-semibold text-white mb-2">Document Metadata</h4>
@@ -488,7 +538,7 @@ export const MainApp: React.FC = () => {
                         <Button
                           variant="electric"
                           size="lg"
-                          onClick={() => handleDownload('PowerPoint')}
+                          onClick={() => handleDownload('presentation')}
                           className="gap-2"
                         >
                           <Download className="w-5 h-5" />

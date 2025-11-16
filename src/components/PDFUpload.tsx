@@ -3,12 +3,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, FileText, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ProcessingAnimation } from '@/components/ProcessingAnimation';
 
 interface PDFUploadProps {
   onFileUpload: (file: File) => void;
+  isProcessing?: boolean;
 }
 
-export const PDFUpload: React.FC<PDFUploadProps> = ({ onFileUpload }) => {
+export const PDFUpload: React.FC<PDFUploadProps> = ({ onFileUpload, isProcessing = false }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,14 +95,16 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onFileUpload }) => {
   return (
     <Card 
       className={`
-        relative border-2 border-dashed transition-all duration-200 cursor-pointer
-        ${dragActive 
-          ? 'border-electric bg-electric/5' 
+        relative border-2 border-dashed transition-all duration-200 animate-fadeIn
+        ${isProcessing 
+          ? 'border-blue-500 bg-blue-500/5 cursor-default' 
+          : dragActive 
+          ? 'border-electric bg-electric/5 cursor-pointer' 
           : error 
-          ? 'border-destructive bg-destructive/5'
-          : 'border-border hover:border-electric/50 hover:bg-electric/5'
+          ? 'border-destructive bg-destructive/5 cursor-pointer'
+          : 'border-border hover:border-electric/50 hover:bg-electric/5 cursor-pointer'
         }
-        ${isUploading ? 'pointer-events-none' : ''}
+        ${isUploading || isProcessing ? 'pointer-events-none' : ''}
       `}
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
@@ -112,11 +116,13 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onFileUpload }) => {
         accept=".pdf"
         onChange={handleFileInput}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        disabled={isUploading}
+        disabled={isUploading || isProcessing}
       />
       
       <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
-        {isUploading ? (
+        {isProcessing ? (
+          <ProcessingAnimation />
+        ) : isUploading ? (
           <>
             <Loader2 className="w-12 h-12 text-electric animate-spin" />
             <div>
