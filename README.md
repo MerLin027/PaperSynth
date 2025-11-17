@@ -1,6 +1,6 @@
 # PaperSynth
 
-## Project Overview
+## 1. Project Overview
 This project provides PaperSynth, an AI-powered synthesis tool for generating alternative content from research papers. It allows users to upload a research paper (PDF) and automatically generates:
 - **Summarized Content**
 - **AI-generated Podcast**
@@ -8,7 +8,7 @@ This project provides PaperSynth, an AI-powered synthesis tool for generating al
 
 This tool enables researchers, students, and professionals to quickly understand and present research findings in various formats using AI models.
 
-## Features
+## 2. Features
 - **PDF Extraction:** Extracts text from research papers (up to 10MB, 100 pages).
 - **AI-powered Summarization:** Uses Google Gemini AI (gemini-2.0-flash) to summarize research papers with high quality.
 - **AI Voiceover:** Converts summaries into AI-generated audio using ElevenLabs TTS.
@@ -16,7 +16,7 @@ This tool enables researchers, students, and professionals to quickly understand
 - **User Interface:** Provides an interactive UI via Streamlit.
 - **RESTful API:** FastAPI backend with authentication and rate limiting.
 
-## Tech Stack
+## 3. Tech Stack
 - **Backend:** FastAPI (port 8000), Uvicorn
 - **Frontend:** 
   - React with TypeScript
@@ -34,7 +34,7 @@ This tool enables researchers, students, and professionals to quickly understand
 
 ---
 
-## Setup Instructions
+## 4. Setup Instructions
 
 ### Prerequisites
 Ensure you have the following installed on your system:
@@ -87,12 +87,16 @@ The React application will be available at `http://localhost:3000/`.
 
 **Alternative:** Use `start_project.bat` (Windows) to start both servers automatically.
 
-Notes:
+**Notes:**
 - Generated files are served under `/static/{request_id}/...` and links are returned by the API.
 - Frontend communicates with backend via REST API at `http://localhost:8000`
 - CORS: By default the API allows `http://localhost:3000`. To add more, set `ALLOWED_CORS_ORIGINS` env (comma-separated).
 
-### Configuration (environment variables)
+---
+
+## 5. Configuration
+
+### Environment Variables
 - `GEMINI_API_KEY`: Google Gemini API key (required for AI text summarization)
 - `ELEVENLABS_API_KEY`: ElevenLabs TTS key (required for audio when enabled)
 - `API_AUTH_TOKEN`: Bearer token required by the backend; set in Streamlit env too
@@ -105,7 +109,7 @@ Notes:
 - `TEMP_TTL_HOURS`: Hours to keep generated files (default `24`)
 - `TEMP_SIZE_CAP_GB`: Max temp storage before pruning oldest (default `1`)
 
-### Example reverse proxy (Nginx)
+### Example Reverse Proxy (Nginx)
 ```
 server {
     listen 443 ssl;
@@ -125,48 +129,7 @@ server {
 
 ---
 
-## Troubleshooting
-
-### 1. API Key Errors
-- Ensure `.env` file is correctly set up.
-- Reload the environment: `source venv/bin/activate` or `venv\Scripts\activate` (Windows).
-
-### 2. Missing Dependencies
-- **Backend:** Run `pip install -r requirements.txt` to install all Python dependencies.
-- **Frontend:** Run `npm install` in the frontend directory.
-- Ensure you are inside the virtual environment when running the backend application.
-
-### 4. Frontend Build Issues
-- Clear npm cache: `npm cache clean --force`
-- Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
-- Check Node.js version compatibility (Node 16+ recommended)
-
----
-
-## Documentation
-- **SETUP_GUIDE.md** - Detailed setup instructions with troubleshooting
-- **PAPER_GUIDE.md** - AI agent guide for generating research papers about this project
-- **PORT_CHANGES_SUMMARY.md** - Documentation of port configuration changes
-- **BACKEND_ISSUES_FIXED.md** - Backend troubleshooting and fixes
-
-## Future Enhancements
-- **Batch Processing:** Process multiple papers simultaneously
-- **Multi-Language Support:** Summarization and translation in multiple languages
-- **Reference Manager Integration:** Zotero, Mendeley plugins
-- **DOI/URL Fetching:** Direct paper download from DOI or URLs
-- **Custom Templates:** Customizable presentation and summary templates
-- **User Accounts:** History tracking and saved preferences
-- **Table/Figure Extraction:** Extract and describe tables and figures from PDFs
-- **Citation Analysis:** Extract and visualize citation networks
-
----
-
-## License
-This project is licensed under the MIT License.
-
----
-
-## Project Structure
+## 6. Project Structure
 ```
 paper-synth/
 ├── backend/
@@ -186,17 +149,62 @@ paper-synth/
 └── temp_files/              # Temporary storage for generated files
 ```
 
-## Contributors
+---
+
+## 7. Security & Operations
+
+- **Authentication:** Backend requires `Authorization: Bearer <API_AUTH_TOKEN>` on POST `/process-paper/` (if `API_AUTH_TOKEN` is set).
+- **Rate limiting & Concurrency:** Per-token/IP rate limit (`RATE_LIMIT_PER_MINUTE`, default 10) and global concurrency cap (`CONCURRENCY_LIMIT`, default 2).
+- **CORS & HTTPS:** Allow browser origins via `ALLOWED_CORS_ORIGINS`. Terminate TLS at a reverse proxy and forward `X-Forwarded-*` headers.
+- **Signed Downloads (Optional):** Enable with `SIGNED_DOWNLOADS=true` and set `DOWNLOAD_SIGNING_KEY`. Links expire quickly and are HMAC-verified at `/download`.
+- **Feature Flags:** Toggle heavy features via `ENABLE_TTS`.
+
+---
+
+## 8. Troubleshooting
+
+### 1. API Key Errors
+- Ensure `.env` file is correctly set up.
+- Reload the environment: `source venv/bin/activate` or `venv\Scripts\activate` (Windows).
+
+### 2. Missing Dependencies
+- **Backend:** Run `pip install -r requirements.txt` to install all Python dependencies.
+- **Frontend:** Run `npm install` in the frontend directory.
+- Ensure you are inside the virtual environment when running the backend application.
+
+### 4. Frontend Build Issues
+- Clear npm cache: `npm cache clean --force`
+- Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
+- Check Node.js version compatibility (Node 16+ recommended)
+
+---
+
+## 9. Documentation
+- **SETUP_GUIDE.md** - Detailed setup instructions with troubleshooting
+- **PAPER_GUIDE.md** - AI agent guide for generating research papers about this project
+- **PORT_CHANGES_SUMMARY.md** - Documentation of port configuration changes
+- **BACKEND_ISSUES_FIXED.md** - Backend troubleshooting and fixes
+
+---
+
+## 10. Future Enhancements
+- **Batch Processing:** Process multiple papers simultaneously
+- **Multi-Language Support:** Summarization and translation in multiple languages
+- **Reference Manager Integration:** Zotero, Mendeley plugins
+- **DOI/URL Fetching:** Direct paper download from DOI or URLs
+- **Custom Templates:** Customizable presentation and summary templates
+- **User Accounts:** History tracking and saved preferences
+- **Table/Figure Extraction:** Extract and describe tables and figures from PDFs
+- **Citation Analysis:** Extract and visualize citation networks
+
+---
+
+## 11. Contributors
 **Vrushank Ganatra**
 
 ---
 
-## Security & Ops
-
-- Authentication: Backend requires `Authorization: Bearer <API_AUTH_TOKEN>` on POST `/process-paper/` (if `API_AUTH_TOKEN` is set).
-- Rate limiting & concurrency: Per-token/IP rate limit (`RATE_LIMIT_PER_MINUTE`, default 10) and global concurrency cap (`CONCURRENCY_LIMIT`, default 2).
-- CORS & HTTPS: Allow browser origins via `ALLOWED_CORS_ORIGINS`. Terminate TLS at a reverse proxy and forward `X-Forwarded-*` headers.
-- Signed downloads (optional): Enable with `SIGNED_DOWNLOADS=true` and set `DOWNLOAD_SIGNING_KEY`. Links expire quickly and are HMAC-verified at `/download`.
-- Feature flags: Toggle heavy features via `ENABLE_TTS`.
+## 12. License
+This project is licensed under the MIT License.
 - Health/status: `GET /health` for readiness; `GET /status/{request_id}` to check available assets.
 - Observability: Every request gets an `X-Request-ID` header and is logged with that ID; Authorization header is redacted in logs.
