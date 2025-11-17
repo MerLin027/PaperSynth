@@ -348,7 +348,7 @@ export const MainApp: React.FC = () => {
         {/* PDF Upload */}
         {!uploadedFile && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white text-center">
+            <h2 className="text-2xl font-bold text-foreground text-center">
               Upload Your Research Paper
             </h2>
             <PDFUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
