@@ -29,173 +29,173 @@ This tool enables researchers, students, and professionals to quickly understand
   - ElevenLabs TTS for audio generation
 - **PDF Processing:** PyMuPDF (fitz), FPDF
 - **Presentation Generation:** python-pptx
-- **Security:** Bearer token authentication, rate limiting, CORS
-- **Deployment:** Uvicorn ASGI server (backend), Vite dev server (frontend)
+# PaperSynth
+
+PaperSynth is an AI-powered tool that extracts knowledge from research papers (PDFs) and produces concise summaries, optional AI voiceovers, and presentation slides to help readers quickly consume and share findings.
+
+**Key outputs:** summaries, audio narration, and PowerPoint slides generated from uploaded PDFs.
+
+**Repository:** https://github.com/MerLin027/PaperSynth
 
 ---
 
-## 4. Setup Instructions
+## Features
 
-### Prerequisites
-Ensure you have the following installed on your system:
-- Python 3.8+
-- Node.js & npm (for frontend) - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-- pip
-- virtualenv (recommended)
+- PDF extraction and text processing (supports typical research-paper sizes)
+- Configurable AI summarization (Google Generative Models)
+- Optional TTS (ElevenLabs) to create an audio podcast-style narration
+- Presentation generation (PowerPoint via python-pptx)
+- REST API (FastAPI) with authentication, rate-limiting, and file hosting
+- Clean React + TypeScript UI (Vite, Tailwind, shadcn-ui)
 
-### 1. Clone the Repository
-```sh
-git clone https://github.com/MerLin027/papersynth.git
-cd papersynth
+---
+
+## Tech Stack
+
+- Backend: Python, FastAPI, Uvicorn
+- Frontend: React + TypeScript, Vite, Tailwind CSS, shadcn-ui
+- AI: Google Generative Language (Gemini family) and optional ElevenLabs TTS
+- PDF: PyMuPDF (fitz), FPDF
+- Presentation: python-pptx
+
+---
+
+## Quick Start (development)
+
+These steps assume Windows PowerShell (adapt for macOS/Linux accordingly).
+
+1) Clone the repo
+
+```powershell
+git clone https://github.com/MerLin027/PaperSynth.git
+cd "paper-synth-main"
 ```
 
-### 2. Install Backend Dependencies
-```sh
+2) Backend: create and activate a virtual environment, then install Python deps
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate
 pip install -r requirements.txt
 ```
 
-### 3. Install Frontend Dependencies
-```sh
-cd frontend  # or wherever your React app is located
+3) Frontend: install Node deps (run from repository root)
+
+```powershell
 npm install
-cd ..
 ```
 
-### 4. Set Up API Keys
-Create a `.env` file in the root directory and add your API keys:
+4) Environment variables
+
+- Backend env: copy `backend.env.example` -> `backend.env` and fill values (recommended)
+- Frontend env: create `.env` with these vars for development:
+
 ```ini
-GEMINI_API_KEY=your-gemini-api-key
-ELEVENLABS_API_KEY=your-elevenlabs-api-key
-API_AUTH_TOKEN=your-secret-token
+VITE_API_BASE_URL=http://localhost:8000
+VITE_API_AUTH_TOKEN=your-api-auth-token
 ```
-**Required API Keys:**
-- `GEMINI_API_KEY`: Get from https://aistudio.google.com/app/apikey (required for text summarization)
-- `ELEVENLABS_API_KEY`: Get from https://elevenlabs.io/ (required for text-to-speech)
 
-### 5. Run the Backend Server
-```sh
+Required backend keys (examples): `GEMINI_API_KEY`, `ELEVENLABS_API_KEY` (if TTS), `API_AUTH_TOKEN`.
+
+5) Run servers (two terminals)
+
+Backend (terminal A):
+```powershell
+.\.venv\Scripts\Activate
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
-This will start the FastAPI backend.
 
-### 6. Run the Frontend (in a separate terminal)
-```sh
-cd frontend
+Frontend (terminal B):
+```powershell
 npm run dev
 ```
-The React application will be available at `http://localhost:3000/`.
 
-**Alternative:** Use `start_project.bat` (Windows) to start both servers automatically.
-
-**Notes:**
-- Generated files are served under `/static/{request_id}/...` and links are returned by the API.
-- Frontend communicates with backend via REST API at `http://localhost:8000`
-- CORS: By default the API allows `http://localhost:3000`. To add more, set `ALLOWED_CORS_ORIGINS` env (comma-separated).
+Open the UI at `http://localhost:3000`.
 
 ---
 
-## 5. Configuration
+## API (overview)
 
-### Environment Variables
-- `GEMINI_API_KEY`: Google Gemini API key (required for AI text summarization)
-- `ELEVENLABS_API_KEY`: ElevenLabs TTS key (required for audio when enabled)
-- `API_AUTH_TOKEN`: Bearer token required by the backend; set in Streamlit env too
-- `ALLOWED_CORS_ORIGINS`: Comma-separated list of allowed browser origins (default `http://localhost:3000`)
-- `ENABLE_TTS`: `true|false` to enable/disable audio generation (default `true`)
-- `SIGNED_DOWNLOADS`: `true|false` to enable signed, short-lived download URLs (default `false`)
-- `DOWNLOAD_SIGNING_KEY`: Secret used to sign download URLs (required if `SIGNED_DOWNLOADS=true`)
-- `RATE_LIMIT_PER_MINUTE`: Requests per minute per token/IP (default `10`)
-- `CONCURRENCY_LIMIT`: Max concurrent processing jobs (default `2`)
-- `TEMP_TTL_HOURS`: Hours to keep generated files (default `24`)
-- `TEMP_SIZE_CAP_GB`: Max temp storage before pruning oldest (default `1`)
+- POST `/process-paper/` — upload a PDF and request processing (summary / audio / slides). Include `Authorization: Bearer <API_AUTH_TOKEN>` when `API_AUTH_TOKEN` is enabled.
+- GET `/status/{request_id}` — check processing status and asset links
+- GET `/health` — readiness check
 
-### Example Reverse Proxy (Nginx)
+Example curl upload (replace token and file):
+
+```bash
+curl -X POST "http://localhost:8000/process-paper/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@./my_paper.pdf" \
+  -F "summary_length=medium" \
+  -F "generate_audio=true"
 ```
-server {
-    listen 443 ssl;
-    server_name your.domain;
 
-    ssl_certificate /path/fullchain.pem;
-    ssl_certificate_key /path/privkey.pem;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-    }
-}
-```
+The API will return JSON containing a `request_id`. Poll `/status/{request_id}` to retrieve generated asset URLs (summary, audio, slides, PDF).
 
 ---
 
-## 6. Project Structure
-```
-paper-synth/
-├── backend/
-│   ├── main.py                # FastAPI backend server
-│   ├── requirements.txt       # Python dependencies
-│   └── .env                   # Backend environment config
-├── frontend/
-│   ├── src/
-│   │   ├── components/        # React components
-│   │   ├── pages/            # Page components
-│   │   └── App.tsx           # Main React app
-│   ├── package.json          # Node.js dependencies
-│   └── vite.config.ts        # Vite configuration
-├── start_project.bat         # Windows startup script
-├── PAPER_GUIDE.md           # Research paper generation guide
-├── SETUP_GUIDE.md           # Detailed setup instructions
-└── temp_files/              # Temporary storage for generated files
+## Configuration
+
+- `backend.env` (or your environment):
+  - `GEMINI_API_KEY` — Google Generative Language API key
+  - `ELEVENLABS_API_KEY` — ElevenLabs key (optional)
+  - `API_AUTH_TOKEN` — shared bearer token for frontend ↔ backend
+  - `ALLOWED_CORS_ORIGINS` — comma-separated origins (default `http://localhost:3000`)
+  - `ENABLE_TTS` — `true|false` to enable audio generation
+  - `SIGNED_DOWNLOADS` / `DOWNLOAD_SIGNING_KEY` — optional short-lived signed URLs
+  - `RATE_LIMIT_PER_MINUTE`, `CONCURRENCY_LIMIT`, `TEMP_TTL_HOURS`, `TEMP_SIZE_CAP_GB`
+
+Frontend development config: use `VITE_API_BASE_URL` and `VITE_API_AUTH_TOKEN` in `.env` (Vite will expose `VITE_` prefixed vars to the client).
+
+---
+
+## Troubleshooting
+
+- Gemini API errors: ensure the Google Generative Language API is enabled for your Google Cloud project and the `GEMINI_API_KEY` is valid and has quota.
+- 500-summary errors often indicate API key, model, or quota issues — check backend logs and confirm model alias in `main.py` (we recommend using a stable alias such as `gemini-flash-latest`).
+- If uploads fail with large PDFs, confirm file size limits and increase `TEMP_SIZE_CAP_GB` or frontend validation as needed.
+- TTS issues: supply a valid `ELEVENLABS_API_KEY` or set `ENABLE_TTS=false`.
+
+Common commands:
+
+```powershell
+# activate venv
+.\.venv\Scripts\Activate
+# show backend logs (if running via uvicorn)
+# (use your terminal's method to view output)
 ```
 
 ---
 
-## 7. Security & Operations
+## Project layout (high level)
 
-- **Authentication:** Backend requires `Authorization: Bearer <API_AUTH_TOKEN>` on POST `/process-paper/` (if `API_AUTH_TOKEN` is set).
-- **Rate limiting & Concurrency:** Per-token/IP rate limit (`RATE_LIMIT_PER_MINUTE`, default 10) and global concurrency cap (`CONCURRENCY_LIMIT`, default 2).
-- **CORS & HTTPS:** Allow browser origins via `ALLOWED_CORS_ORIGINS`. Terminate TLS at a reverse proxy and forward `X-Forwarded-*` headers.
-- **Signed Downloads (Optional):** Enable with `SIGNED_DOWNLOADS=true` and set `DOWNLOAD_SIGNING_KEY`. Links expire quickly and are HMAC-verified at `/download`.
-- **Feature Flags:** Toggle heavy features via `ENABLE_TTS`.
+Files and folders you will use frequently:
 
----
-
-## 8. Troubleshooting
-
-### 1. API Key Errors
-- Ensure `.env` file is correctly set up.
-- Reload the environment: `source venv/bin/activate` or `venv\Scripts\activate` (Windows).
-
-### 2. Missing Dependencies
-- **Backend:** Run `pip install -r requirements.txt` to install all Python dependencies.
-- **Frontend:** Run `npm install` in the frontend directory.
-- Ensure you are inside the virtual environment when running the backend application.
-
-### 4. Frontend Build Issues
-- Clear npm cache: `npm cache clean --force`
-- Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
-- Check Node.js version compatibility (Node 16+ recommended)
+- `main.py` — FastAPI backend entrypoint
+- `requirements.txt` — Python dependencies
+- `package.json` — frontend scripts & deps
+- `src/` — React application source
+- `backend.env.example` — sample backend env file
+- `temp_files/` — generated artifacts (cleaned according to TTL)
 
 ---
 
-## 9. Documentation
-- **SETUP_GUIDE.md** - Detailed setup instructions with troubleshooting
-- **PAPER_GUIDE.md** - AI agent guide for generating research papers about this project
-- **PORT_CHANGES_SUMMARY.md** - Documentation of port configuration changes
-- **BACKEND_ISSUES_FIXED.md** - Backend troubleshooting and fixes
+## Contributing
+
+Contributions, bug reports, and feature requests are welcome. Please open an issue or submit a pull request. If you plan to work on the codebase, open an issue first so we can coordinate.
 
 ---
 
-## 10. Future Enhancements
-- **Batch Processing:** Process multiple papers simultaneously
-- **Multi-Language Support:** Summarization and translation in multiple languages
-- **Reference Manager Integration:** Zotero, Mendeley plugins
-- **DOI/URL Fetching:** Direct paper download from DOI or URLs
-- **Custom Templates:** Customizable presentation and summary templates
-- **User Accounts:** History tracking and saved preferences
-- **Table/Figure Extraction:** Extract and describe tables and figures from PDFs
-- **Citation Analysis:** Extract and visualize citation networks
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+## Notes / Next steps
+
+- After editing environment values, restart the backend to pick up changes.
+- If you'd like, I can commit and push this README update for you and/or open a PR with the changes.
 
 ---
 
