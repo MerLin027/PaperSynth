@@ -187,7 +187,7 @@ paper-synth/
 ```
 
 ## Contributors
-- **Vrushank Ganatra**
+**Vrushank Ganatra**
 
 ---
 
