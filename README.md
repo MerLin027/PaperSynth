@@ -1,36 +1,5 @@
 # PaperSynth
 
-## 1. Project Overview
-This project provides PaperSynth, an AI-powered synthesis tool for generating alternative content from research papers. It allows users to upload a research paper (PDF) and automatically generates:
-- **Summarized Content**
-- **AI-generated Podcast**
-- **Presentation Slides**
-
-This tool enables researchers, students, and professionals to quickly understand and present research findings in various formats using AI models.
-
-## 2. Features
-- **PDF Extraction:** Extracts text from research papers (up to 10MB, 100 pages).
-- **AI-powered Summarization:** Uses Google Gemini AI (gemini-2.0-flash) to summarize research papers with high quality.
-- **AI Voiceover:** Converts summaries into AI-generated audio using ElevenLabs TTS.
-- **Presentation Slides:** Creates PowerPoint presentations from summarized content.
-- **User Interface:** Provides an interactive UI via Streamlit.
-- **RESTful API:** FastAPI backend with authentication and rate limiting.
-
-## 3. Tech Stack
-- **Backend:** FastAPI (port 8000), Uvicorn
-- **Frontend:** 
-  - React with TypeScript
-  - Vite build tool
-  - shadcn-ui components
-  - Tailwind CSS for styling
-  - Runs on port 3000
-- **AI Models:**
-  - Google Gemini AI (gemini-2.0-flash) for summarization
-  - ElevenLabs TTS for audio generation
-- **PDF Processing:** PyMuPDF (fitz), FPDF
-- **Presentation Generation:** python-pptx
-# PaperSynth
-
 PaperSynth is an AI-powered tool that extracts knowledge from research papers (PDFs) and produces concise summaries, optional AI voiceovers, and presentation slides to help readers quickly consume and share findings.
 
 **Key outputs:** summaries, audio narration, and PowerPoint slides generated from uploaded PDFs.
