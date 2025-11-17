@@ -6,10 +6,10 @@ import { PDFUpload } from '@/components/PDFUpload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Volume2, Presentation, Play, Pause, Square, Download, ExternalLink, AlertCircle } from 'lucide-react';
+import { FileText, Volume2, Presentation, Play, Pause, Square, Download, ExternalLink, AlertCircle, Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { processPaper, downloadFile, validatePDFFile } from '@/services/paperSynthBackend';
-import { adaptBackendResponse, hasAudio, hasPresentation, type AdaptedFileData } from '@/services/backendAdapter';
+import { adaptBackendResponse, hasAudio, hasPresentation, hasSummaryPDF, type AdaptedFileData } from '@/services/backendAdapter';
 
 export const MainApp: React.FC = () => {
   const { user, logout } = useAuth();
@@ -19,6 +19,7 @@ export const MainApp: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState('summary');
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [downloadingType, setDownloadingType] = useState<'presentation' | 'audio' | 'pdf' | null>(null);
 
   // Helper function to clean markdown syntax from text
   const cleanMarkdown = (text: string) => {
@@ -241,6 +242,8 @@ export const MainApp: React.FC = () => {
   const handleDownload = async (type: 'presentation' | 'audio' | 'pdf') => {
     if (!uploadedFile) return;
     
+    setDownloadingType(type);
+    
     try {
       let fileUrl: string | undefined;
       let fileName: string;
@@ -302,7 +305,72 @@ export const MainApp: React.FC = () => {
         description: error.message || "Failed to download the file.",
         variant: "destructive",
       });
+    } finally {
+      setDownloadingType(null);
     }
+  };
+
+  const parseCleanSummary = (text: string) => {
+    // Remove all --- markers first
+    const cleanedText = text.replace(/^---+$/gm, '').trim();
+    
+    // Split into sections by double line breaks
+    const sections = cleanedText.split('\n\n').filter(s => s.trim());
+    
+    return sections.map(section => {
+      const lines = section.split('\n').filter(l => l.trim());
+      if (lines.length === 0) return null;
+      
+      const firstLine = lines[0].trim();
+      
+      // Detect heading (short line, uppercase, or has markers, or ends with colon)
+      const isHeading = 
+        (firstLine.length < 100 && firstLine === firstLine.toUpperCase()) ||
+        firstLine.match(/^\*\*[^*]+\*\*/) ||
+        firstLine.startsWith('#') ||
+        (firstLine.length < 80 && !firstLine.includes('.') && !firstLine.includes(','));
+      
+      if (isHeading) {
+        return {
+          type: 'heading',
+          content: firstLine
+            .replace(/\*\*/g, '')
+            .replace(/#+/g, '')
+            .replace(/:+$/g, '')
+            .trim()
+        };
+      }
+      
+      // Check if ALL lines are bullet points
+      const allBullets = lines.every(l => 
+        l.trim().match(/^[\*\-\•·]/) || 
+        l.trim().match(/^\d+\./)
+      );
+      
+      if (allBullets) {
+        return {
+          type: 'list',
+          items: lines.map(l => 
+            l.trim()
+              .replace(/^[\*\-\•·]\s*/g, '')
+              .replace(/^\d+\.\s*/g, '')
+              .replace(/\*\*/g, '')
+              .replace(/\*/g, '')
+              .trim()
+          )
+        };
+      }
+      
+      // Regular paragraph - join all lines
+      return {
+        type: 'paragraph',
+        content: lines
+          .join(' ')
+          .replace(/\*\*/g, '')
+          .replace(/\*/g, '')
+          .trim()
+      };
+    }).filter(Boolean);
   };
 
   return (
@@ -325,25 +393,47 @@ export const MainApp: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
-        {/* About PaperSynth */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-electric flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              About PaperSynth
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Transform research papers into comprehensive summaries, audio content, and presentations using advanced AI. 
-              Upload PDFs to get instant analysis, audio synthesis, and presentation generation.
+        {/* About PaperSynth - Theme Adaptive */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:via-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm rounded-2xl border border-blue-200 dark:border-blue-500/20 overflow-hidden shadow-lg">
+          {/* Decorative Top Bar */}
+          <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
+          
+          <div className="p-8">
+            {/* Header with Icon */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-100 dark:bg-blue-500/10 rounded-lg">
+                <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                About PaperSynth
+              </h2>
+            </div>
+            
+            {/* Description */}
+            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed mb-4">
+              PaperSynth is an AI-powered research paper summarization tool that transforms dense academic PDFs into accessible, multi-format outputs. Designed for researchers, students, and professionals who need to quickly grasp complex research, PaperSynth leverages advanced AI models to generate concise summaries, visual abstracts, audio narrations, and presentation slides—all from a single upload.
             </p>
-            <Button variant="outline" size="sm" className="gap-2">
-              <ExternalLink className="w-4 h-4" />
-              Learn more
-            </Button>
-          </CardContent>
-        </Card>
+            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed mb-6">
+              Built with a Python FastAPI backend powered by Google's Gemini AI and a modern React TypeScript frontend, PaperSynth streamlines the literature review process by converting hours of reading into minutes of insight. Whether you're preparing for a conference presentation, conducting a meta-analysis, or staying current with your field, PaperSynth helps you synthesize knowledge faster without sacrificing depth or accuracy.
+            </p>
+            
+            {/* Feature Pills */}
+            <div className="flex flex-wrap gap-2">
+              <div className="px-4 py-2 bg-blue-100 dark:bg-blue-500/10 border border-blue-300 dark:border-blue-500/30 rounded-full text-blue-700 dark:text-blue-300 text-sm font-medium flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
+                AI-Powered Summaries
+              </div>
+              <div className="px-4 py-2 bg-purple-100 dark:bg-purple-500/10 border border-purple-300 dark:border-purple-500/30 rounded-full text-purple-700 dark:text-purple-300 text-sm font-medium flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 dark:bg-purple-400" />
+                Audio Narration
+              </div>
+              <div className="px-4 py-2 bg-indigo-100 dark:bg-indigo-500/10 border border-indigo-300 dark:border-indigo-500/30 rounded-full text-indigo-700 dark:text-indigo-300 text-sm font-medium flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
+                Instant Presentations
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* PDF Upload */}
         {!uploadedFile && (
@@ -389,80 +479,91 @@ export const MainApp: React.FC = () => {
               </TabsList>
 
               <TabsContent value="summary" className="mt-4">
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle className="text-electric">Research Summary</CardTitle>
-                    <CardDescription>
-                      AI-generated summary of the key findings and methodologies
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="max-w-5xl mx-auto space-y-6">
-                      {/* Main Summary Card */}
-                      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-gray-700 shadow-xl">
-                        <div className="prose prose-invert max-w-none">
-                          <div className="text-gray-300 leading-relaxed space-y-6">
-                            {uploadedFile.summary.split('\n\n').map((section, index) => {
-                              // Check if it's a heading (starts with **, #, or all caps)
-                              const isHeading = section.startsWith('**') || section.startsWith('#') || 
-                                               (section.length < 100 && section === section.toUpperCase());
-                              
-                              if (isHeading) {
-                                return (
-                                  <h3 key={index} className="text-2xl font-bold text-white mt-8 mb-4 first:mt-0">
-                                    {cleanMarkdown(section)}
-                                  </h3>
-                                );
-                              }
-                              
-                              return (
-                                <div key={index} className="space-y-3">
-                                  {section.split('\n').map((line, i) => {
-                                    // Check if it's a bullet point
-                                    if (line.trim().startsWith('*') || line.trim().startsWith('-')) {
-                                      return (
-                                        <div key={i} className="flex items-start gap-3 ml-4">
-                                          <span className="text-blue-400 mt-1.5">•</span>
-                                          <span className="flex-1 text-gray-300">
-                                            {cleanMarkdown(line.replace(/^\*\s*|\-\s*/, ''))}
-                                          </span>
-                                        </div>
-                                      );
-                                    }
-                                    
-                                    // Regular paragraph text
-                                    if (line.trim()) {
-                                      return (
-                                        <p key={i} className="text-gray-300 text-base leading-relaxed">
-                                          {cleanMarkdown(line)}
-                                        </p>
-                                      );
-                                    }
-                                    
-                                    return null;
-                                  })}
+                <div className="max-w-4xl mx-auto">
+                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8">
+                    <div className="space-y-6">
+                      {parseCleanSummary(uploadedFile.summary).map((section, index) => {
+                        if (section.type === 'heading') {
+                          return (
+                            <div key={index} className="border-b border-gray-700/50 pb-3">
+                              <h2 className="text-xl font-semibold text-white">
+                                {section.content}
+                              </h2>
+                            </div>
+                          );
+                        }
+                        
+                        if (section.type === 'list') {
+                          return (
+                            <div key={index} className="space-y-3">
+                              {section.items.map((item, i) => (
+                                <div key={i} className="flex items-start gap-3 group">
+                                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                                  <p className="text-gray-300 leading-relaxed text-[15px]">
+                                    {item}
+                                  </p>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <p key={index} className="text-gray-300 leading-relaxed text-[15px]">
+                            {section.content}
+                          </p>
+                        );
+                      })}
                     </div>
-                    <div className="mt-6 pt-4 border-t border-border">
-                      <h4 className="font-semibold text-white mb-2">Document Metadata</h4>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">File size:</span>
-                          <span className="ml-2 text-white">{formatFileSize(uploadedFile.size)}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Pages:</span>
-                          <span className="ml-2 text-white">{uploadedFile.pages}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
+                
+                {/* Upload New PDF & Download PDF Buttons */}
+                <div className="mt-6 flex justify-center items-center gap-4">
+                  {/* Upload New PDF Button - LEFT */}
+                  <label htmlFor="file-upload-summary">
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('file-upload-summary')?.click()}
+                      className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-all shadow-lg hover:shadow-xl"
+                    >
+                      <Upload className="w-5 h-5" />
+                      Upload New PDF
+                    </button>
+                  </label>
+                  
+                  <input
+                    id="file-upload-summary"
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(file);
+                    }}
+                    className="hidden"
+                  />
+
+                  {/* Download Summary PDF Button - RIGHT */}
+                  {hasSummaryPDF(uploadedFile) && (
+                    <button
+                      onClick={() => handleDownload('pdf')}
+                      disabled={downloadingType === 'pdf'}
+                      className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {downloadingType === 'pdf' ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-5 h-5" />
+                          Download Summary PDF
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
               </TabsContent>
 
               <TabsContent value="audio" className="mt-4">

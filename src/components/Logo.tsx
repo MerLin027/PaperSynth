@@ -25,7 +25,7 @@ export const Logo: React.FC<LogoProps> = ({ className, size = 'lg' }) => {
           "object-contain electric-glow transition-all duration-300"
         )}
       />
-      <span className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+      <span className="font-logo text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent tracking-tight">
         PaperSynth
       </span>
     </div>
